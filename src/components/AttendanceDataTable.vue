@@ -5,7 +5,7 @@
 			<v-spacer></v-spacer>
 			<v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line hide-details></v-text-field>
 		</v-card-title>
-		<v-data-table :headers="headers" :items="assistances" :items-per-page="5" :search="search" multi-sort>
+		<v-data-table :headers="headers" :items="attendances" :items-per-page="5" :search="search" multi-sort>
 			<template v-slot:top>
 				<v-toolbar flat>
 					<v-spacer></v-spacer>
@@ -31,12 +31,12 @@
 									<v-list rounded>
 										<v-list-item-group v-model="editedItem.people" multiple>
 											<template v-for="item in all_people">
-												<v-list-item :key="item.id" :value="item.id" active-class="light-blue lighten-3">
+												<v-list-item :key="item._id" :value="item._id" active-class="light-blue lighten-3">
 													<template v-slot:default="{ active }">
 														<v-list-item-content>
 															<v-list-item-title
 																class="text-left"
-																v-text="`${item.firstname} ${item.lastname}`"
+																v-text="`${item.name} ${item.last_name}`"
 															></v-list-item-title>
 														</v-list-item-content>
 
@@ -75,7 +75,9 @@
 					</v-dialog>
 				</v-toolbar>
 			</template>
-
+			<template v-slot:[`item.date`]="{ item }">
+				{{ getDateFormat(item.date) }}
+			</template>
 			<template v-slot:[`item.total_people`]="{ item }">
 				<v-chip :color="getColor(item.total_people)" dark>
 					{{ item.total_people }}
@@ -90,7 +92,7 @@
 				</v-icon>
 			</template>
 			<template v-slot:no-data>
-				<v-btn color="primary" @click="initialize">
+				<v-btn color="primary" @click="getAttendance">
 					Reset
 				</v-btn>
 			</template>
@@ -119,7 +121,7 @@ export default {
 				{ text: 'Acciones', value: 'actions', sortable: false, align: 'right' }
 			],
 
-			assistances: [
+			attendances: [
 				{
 					uuid: uuidv4(),
 					date: moment().format('YYYY-MM-DD'),
@@ -129,24 +131,9 @@ export default {
 			],
 			all_people: [
 				{
-					id: 'id213123123',
-					firstname: 'Esteban',
-					lastname: 'Cervera'
-				},
-				{
-					id: 'id213234234123',
-					firstname: 'Luis',
-					lastname: 'Cervera'
-				},
-				{
-					id: 'id123545624',
-					firstname: 'Carlos',
-					lastname: 'Cervera'
-				},
-				{
-					id: 'id213353252323',
-					firstname: 'Juan',
-					lastname: 'Cervera'
+					_id: 'id213123123',
+					name: 'Esteban',
+					last_name: 'Cervera'
 				}
 			],
 			editedIndex: -1,
@@ -186,21 +173,24 @@ export default {
 			else if (people < 10) return 'orange';
 			else return 'green';
 		},
-
+		getDateFormat(string) {
+			return moment(string).format('DD-MMM-YYYY');
+		},
 		editItem(item) {
-			this.editedIndex = this.assistances.indexOf(item);
+			this.editedIndex = this.attendances.indexOf(item);
 			this.editedItem = Object.assign({}, item);
 			this.dialog = true;
 		},
 
 		deleteItem(item) {
-			this.editedIndex = this.assistances.indexOf(item);
+			this.editedIndex = this.attendances.indexOf(item);
 			this.editedItem = Object.assign({}, item);
 			this.dialogDelete = true;
 		},
 
 		deleteItemConfirm() {
-			this.people.splice(this.editedIndex, 1);
+			//this.people.splice(this.editedIndex, 1);
+			this.deleteAttendance();
 			this.closeDelete();
 		},
 
@@ -222,14 +212,108 @@ export default {
 
 		save() {
 			this.editedItem.total_people = this.editedItem.people.length;
+
 			if (this.editedIndex > -1) {
-				Object.assign(this.assistances[this.editedIndex], this.editedItem);
+				//EDIT
+				//Object.assign(this.assistances[this.editedIndex], this.editedItem);
+
+				this.editAttendance();
 			} else {
-				this.assistances.push(this.editedItem);
+				//ADD
+				//this.assistances.push(this.editedItem);
+				this.addAttendance();
 			}
 			//console.log(this.editedItem);
 			this.close();
+		},
+		getDate(date) {
+			const dateString = moment(date).format('YYYY-MM-DD');
+			let _date = new Date(); // this creates a date object in the user's timezone
+			_date.setYear(dateString.slice(0, 4));
+			_date.setMonth(parseInt(dateString.slice(5, 7)) - 1); // months a indexed at 0 in js
+			_date.setDate(dateString.slice(8, 10));
+			_date = _date.toISOString().substring(0, 10);
+
+			console.log(_date);
+			return _date;
+		},
+
+		getTotalAttendance(attendances) {
+			attendances.forEach(attendance => {
+				attendance.date = this.getDate(attendance.date);
+				//console.log(attendance.date);
+				attendance.total_people = attendance.people.length;
+			});
+
+			return attendances;
+		},
+
+		// NETWORK LOGIC
+		async getPeople() {
+			await fetch(process.env.VUE_APP_API_URL + 'people/list')
+				.then(response => response.json())
+				.then(data => {
+					//console.log(data);
+					this.all_people = data.data;
+				});
+		},
+		async getAttendance() {
+			await fetch(process.env.VUE_APP_API_URL + 'attendance/')
+				.then(response => response.json())
+				.then(data => {
+					//console.log(data.data);
+					this.attendances = this.getTotalAttendance(data.data);
+				});
+		},
+
+		async addAttendance() {
+			const formData = new FormData();
+			//formData.append('uuid', uuidv4());
+			const date = moment(this.editedItem.date);
+			formData.append('date', date);
+			formData.append('uuid', uuidv4());
+			formData.append('people', this.editedItem.people);
+
+			const requestOptions = {
+				method: 'POST',
+				body: formData
+			};
+
+			await fetch(process.env.VUE_APP_API_URL + 'attendance/', requestOptions).then(response => {
+				response.json();
+			});
+			this.getAttendance();
+			this.getPeople();
+		},
+		async editAttendance() {
+			console.log(this.editedItem.date);
+			const formData = new FormData();
+			const date = moment(this.editedItem.date);
+			formData.append('date', date);
+			formData.append('people', this.editedItem.people);
+
+			const requestOptions = {
+				method: 'PUT',
+				body: formData
+			};
+
+			await fetch(process.env.VUE_APP_API_URL + `attendance/${this.editedItem._id}`, requestOptions).then(response => {
+				response.json();
+			});
+			this.getAttendance();
+			this.getPeople();
+		},
+		async deleteAttendance() {
+			await fetch(process.env.VUE_APP_API_URL + `attendance/${this.editedItem._id}`, {
+				method: 'DELETE'
+			});
+			this.getAttendance();
+			this.getPeople();
 		}
+	},
+	created() {
+		this.getAttendance();
+		this.getPeople();
 	}
 };
 </script>

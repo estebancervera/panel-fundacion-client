@@ -482,7 +482,7 @@
 				</v-icon>
 			</template>
 			<template v-slot:no-data>
-				<v-btn color="primary" @click="initialize">
+				<v-btn color="primary" @click="getPeople">
 					Reset
 				</v-btn>
 			</template>
@@ -865,9 +865,10 @@ export default {
 		async addPeople() {
 			const formData = new FormData();
 			//formData.append('uuid', uuidv4());
+			const birthday = moment(this.editedItem.birthday);
 			formData.append('name', this.editedItem.name);
 			formData.append('last_name', this.editedItem.last_name);
-			formData.append('birthday', this.editedItem.birthday);
+			formData.append('birthday', birthday);
 			formData.append('gender', this.editedItem.gender);
 			formData.append('active', this.editedItem.active);
 			formData.append('address', this.editedItem.address);
@@ -899,10 +900,10 @@ export default {
 		},
 		async editPeople() {
 			const formData = new FormData();
-
+			const birthday = moment(this.editedItem.birthday);
 			formData.append('name', this.editedItem.name);
 			formData.append('last_name', this.editedItem.last_name);
-			formData.append('birthday', this.editedItem.birthday);
+			formData.append('birthday', birthday);
 			formData.append('gender', this.editedItem.gender);
 			formData.append('active', this.editedItem.active);
 			formData.append('address', this.editedItem.address);
