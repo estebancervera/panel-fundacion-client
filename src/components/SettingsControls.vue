@@ -1,5 +1,5 @@
 <template>
-	<v-card :elevation="0">
+	<v-card :elevation="0" color="transparent">
 		<v-card-title class="font-weight-bold">
 			Ajustes
 			<v-spacer></v-spacer>
@@ -10,7 +10,7 @@
 
 				<v-spacer> </v-spacer>
 
-				<v-btn color="error" depressed elevation="2" large raised rounded @click="logout"> Cerrar Sesión</v-btn>
+				<v-btn color="primary" depressed elevation="2" large raised rounded @click="logout"> Cerrar Sesión</v-btn>
 			</v-row>
 		</v-container>
 	</v-card>
@@ -39,7 +39,9 @@ export default {
 		}
 	},
 	methods: {
-		logout() {}
+		logout() {
+			this.$router.push('login');
+		}
 	},
 	mounted() {
 		const theme = localStorage.getItem('useDarkTheme');

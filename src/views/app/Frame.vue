@@ -1,21 +1,21 @@
 <template>
 	<div>
-		<v-navigation-drawer v-model="drawer" app class="pt-4" mini-variant>
-			<router-link to="/people" class="d-block text-center mx-auto mb-9">
-				<v-icon>mdi-account-group</v-icon>
-			</router-link>
+		<v-app-bar app color="navbar" flat dark>
+			<v-container class="py-0 fill-height">
+				<v-avatar  class="mr-10" color="grey darken-1" size="42">
+					<img src="../../assets/IMG_LOGO.jpg" alt="John"
+				/></v-avatar>
 
-			<router-link to="/attendance" class="d-block text-center mx-auto mb-9">
-				<v-icon>mdi-clipboard-list</v-icon>
-			</router-link>
+				<v-btn v-for="link in links" :key="link.link" text @click="sendToView(link)">
+					{{ link.name }}
+				</v-btn>
 
-			<router-link to="/settings" class="d-block text-center mx-auto mb-9">
-				<v-icon>mdi-cog</v-icon>
-			</router-link>
-		</v-navigation-drawer>
+				<v-spacer></v-spacer>
+			</v-container>
+		</v-app-bar>
 
 		<v-main>
-			<router-view class="pa-10"/>
+			<router-view class="pa-10" />
 		</v-main>
 	</div>
 </template>
@@ -27,8 +27,17 @@ export default {
 		return {
 			drawer: true,
 
-			links: ['/people', '/assistance', '/settings']
+			links: [
+				{ name: 'Personas', link: '/people' },
+				{ name: 'Asistencia', link: '/attendance' },
+				{ name: 'Ajustes', link: '/settings' }
+			]
 		};
+	},
+	methods: {
+		sendToView(item) {
+			this.$router.push(item.link);
+		}
 	},
 	mounted() {
 		const theme = localStorage.getItem('useDarkTheme');

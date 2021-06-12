@@ -1,5 +1,5 @@
 <template>
-	<v-card :elevation="0">
+	<v-card :elevation="0" color="transparent">
 		<v-card-title class="font-weight-bold">
 			Asistencias
 			<v-spacer></v-spacer>
@@ -7,7 +7,7 @@
 		</v-card-title>
 		<v-data-table :headers="headers" :items="attendances" :items-per-page="5" :search="search" multi-sort>
 			<template v-slot:top>
-				<v-toolbar flat>
+				<v-toolbar flat class="transparent">
 					<v-spacer></v-spacer>
 					<v-dialog v-model="dialog" max-width="500px">
 						<template v-slot:activator="{ on, attrs }">

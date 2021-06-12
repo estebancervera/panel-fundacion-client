@@ -1,5 +1,7 @@
 <template>
-	<DataTable />
+	<v-card class="ma-16" elevation="0" color="secondary">
+		<DataTable />
+	</v-card>
 </template>
 
 <script>

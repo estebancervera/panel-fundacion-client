@@ -6,17 +6,25 @@ Vue.use(Vuetify);
 
 export default new Vuetify({
 	theme: {
+		options: {
+			customProperties: true
+		},
 		themes: {
 			light: {
-				primary: colors.blue.darken1,
-				secondary: colors.grey.darken1,
+				primary: '#C3073F',
+				secondary: '#EEE2DC',
 				accent: colors.shades.black,
-				error: colors.red.accent3,
-				background: colors.indigo.lighten5
+				table: colors.red.accent3,
+				background: '#FFFFFF',
+				navbar: '#BAB2B5'
 			},
 			dark: {
-				primary: colors.blue.darken1,
-				background: colors.indigo.base
+				primary: '#C3073F',
+				secondary: colors.grey.darken3,
+				accent: colors.shades.black,
+				table: colors.red.accent3,
+				background: '#1A1A1D',
+				navbar: '#4E4E50s'
 			}
 		}
 	}

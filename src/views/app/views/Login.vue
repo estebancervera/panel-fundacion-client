@@ -1,5 +1,5 @@
 <template>
-	<login-component />
+	<login-component class="my-16" />
 </template>
 
 <script>
