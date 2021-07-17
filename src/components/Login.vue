@@ -1,6 +1,9 @@
 <template>
 	<v-container>
 		<v-row justify="space-around">
+			<v-img max-height="250" max-width="500" src="../assets/IMG_LOGO.jpg"></v-img>
+		</v-row>
+		<v-row justify="space-around">
 			<v-card outlined elevation="2" shaped width="600" class="pa-6" color="secondary">
 				<validation-observer ref="observer" v-slot="{ invalid }">
 					<form @submit.prevent="submit">
@@ -27,7 +30,6 @@
 								:value="true"
 								label="Rememeber"
 								type="checkbox"
-								required
 							></v-checkbox>
 						</validation-provider>
 
@@ -88,6 +90,7 @@ export default {
 		submit() {
 			this.$refs.observer.validate();
 			//login
+			this.sendLogin();
 		},
 		clear() {
 			this.name = '';
@@ -96,6 +99,33 @@ export default {
 			this.select = null;
 			this.checkbox = null;
 			this.$refs.observer.reset();
+		},
+		async sendLogin() {
+			const formData = new FormData();
+			formData.append('email', this.email);
+			formData.append('password', this.password);
+
+			const requestOptions = {
+				method: 'POST',
+				body: formData
+			};
+			this.clear();
+			await fetch(process.env.VUE_APP_API_URL + 'login/', requestOptions)
+				.then(response => response.json())
+				.then(response => {
+					console.log(response);
+					try {
+						localStorage.setItem('user', JSON.stringify(response.user));
+						localStorage.setItem('jwt', response.token);
+
+						if (localStorage.getItem('jwt') != null) {
+							this.$router.push('/admin/people');
+						}
+					} catch (error) {
+						console.log(error);
+						//show Alert
+					}
+				});
 		}
 	}
 };

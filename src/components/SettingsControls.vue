@@ -40,7 +40,8 @@ export default {
 	},
 	methods: {
 		logout() {
-			this.$router.push('login');
+			localStorage.clear();
+			this.$router.push('/');
 		}
 	},
 	mounted() {

@@ -250,7 +250,16 @@ export default {
 
 		// NETWORK LOGIC
 		async getPeople() {
-			await fetch(process.env.VUE_APP_API_URL + 'people/list')
+			const token = localStorage.getItem('jwt');
+
+			if (!token) {
+				throw new Error('No token');
+			}
+			await fetch(process.env.VUE_APP_API_URL + 'people/list', {
+				headers: {
+					Authorization: 'Bearer ' + token
+				}
+			})
 				.then(response => response.json())
 				.then(data => {
 					//console.log(data);
@@ -258,7 +267,16 @@ export default {
 				});
 		},
 		async getAttendance() {
-			await fetch(process.env.VUE_APP_API_URL + 'attendance/')
+			const token = localStorage.getItem('jwt');
+
+			if (!token) {
+				throw new Error('No token');
+			}
+			await fetch(process.env.VUE_APP_API_URL + 'attendance/', {
+				headers: {
+					Authorization: 'Bearer ' + token
+				}
+			})
 				.then(response => response.json())
 				.then(data => {
 					//console.log(data.data);
@@ -267,6 +285,11 @@ export default {
 		},
 
 		async addAttendance() {
+			const token = localStorage.getItem('jwt');
+
+			if (!token) {
+				throw new Error('No token');
+			}
 			const formData = new FormData();
 			//formData.append('uuid', uuidv4());
 			const date = moment(this.editedItem.date);
@@ -275,6 +298,9 @@ export default {
 			formData.append('people', this.editedItem.people);
 
 			const requestOptions = {
+				headers: {
+					Authorization: 'Bearer ' + token
+				},
 				method: 'POST',
 				body: formData
 			};
@@ -286,6 +312,11 @@ export default {
 			this.getPeople();
 		},
 		async editAttendance() {
+			const token = localStorage.getItem('jwt');
+
+			if (!token) {
+				throw new Error('No token');
+			}
 			console.log(this.editedItem.date);
 			const formData = new FormData();
 			const date = moment(this.editedItem.date);
@@ -293,6 +324,9 @@ export default {
 			formData.append('people', this.editedItem.people);
 
 			const requestOptions = {
+				headers: {
+					Authorization: 'Bearer ' + token
+				},
 				method: 'PUT',
 				body: formData
 			};
@@ -304,7 +338,15 @@ export default {
 			this.getPeople();
 		},
 		async deleteAttendance() {
+			const token = localStorage.getItem('jwt');
+
+			if (!token) {
+				throw new Error('No token');
+			}
 			await fetch(process.env.VUE_APP_API_URL + `attendance/${this.editedItem._id}`, {
+				headers: {
+					Authorization: 'Bearer ' + token
+				},
 				method: 'DELETE'
 			});
 			this.getAttendance();

@@ -24,7 +24,7 @@ export default new Vuetify({
 				accent: colors.shades.black,
 				table: colors.red.accent3,
 				background: '#1A1A1D',
-				navbar: '#4E4E50s'
+				navbar: '#4E4E50'
 			}
 		}
 	}

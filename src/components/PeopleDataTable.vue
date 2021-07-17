@@ -453,11 +453,11 @@
 			<template v-slot:[`item.birthday`]="{ item }">
 				{{ getDateFormat(item.birthday) }}
 			</template>
-			<template v-slot:[`item.image`]="{ item }">
+			<!-- <template v-slot:[`item.image`]="{ item }">
 				<v-avatar class="ma-1">
 					<img :src="item.image" alt="John" />
 				</v-avatar>
-			</template>
+			</template> -->
 			<template v-slot:[`item.total_given`]="{ item }">
 				<v-chip :color="getColor(item.total_given)" dark>
 					{{ item.total_given }}
@@ -538,12 +538,12 @@ export default {
 			bathrooms: ['Baño', 'Letrina', 'Fecalismo al aire libre'],
 			healthScale: ['1 a 2 días', '3 a 5 días', '6 a 7 días'],
 			headers: [
-				{
-					text: 'Foto',
-					align: 'start',
-					sortable: false,
-					value: 'image'
-				},
+				// {
+				// 	text: 'Foto',
+				// 	align: 'start',
+				// 	sortable: false,
+				// 	value: 'image'
+				// },
 				{ text: 'Nombre', value: 'name' },
 				{ text: 'Apellido', value: 'last_name' },
 				{ text: 'Genero', value: 'gender', align: 'center' },
@@ -855,7 +855,17 @@ export default {
 		// NETWORK LOGIC
 
 		async getPeople() {
-			await fetch(process.env.VUE_APP_API_URL + 'people/')
+			const token = localStorage.getItem('jwt');
+
+			if (!token) {
+				throw new Error('No token');
+			}
+
+			await fetch(process.env.VUE_APP_API_URL + 'people/', {
+				headers: {
+					Authorization: 'Bearer ' + token
+				}
+			})
 				.then(response => response.json())
 				.then(data => {
 					this.people = this.getTotalGiven(data.data);
@@ -863,6 +873,12 @@ export default {
 		},
 
 		async addPeople() {
+			const token = localStorage.getItem('jwt');
+
+			if (!token) {
+				throw new Error('No token');
+			}
+
 			const formData = new FormData();
 			//formData.append('uuid', uuidv4());
 			const birthday = moment(this.editedItem.birthday);
@@ -889,6 +905,9 @@ export default {
 			}
 
 			const requestOptions = {
+				headers: {
+					Authorization: 'Bearer ' + token
+				},
 				method: 'POST',
 				body: formData
 			};
@@ -899,6 +918,12 @@ export default {
 			this.getPeople();
 		},
 		async editPeople() {
+			const token = localStorage.getItem('jwt');
+
+			if (!token) {
+				throw new Error('No token');
+			}
+
 			const formData = new FormData();
 			const birthday = moment(this.editedItem.birthday);
 			formData.append('name', this.editedItem.name);
@@ -924,6 +949,9 @@ export default {
 			}
 
 			const requestOptions = {
+				headers: {
+					Authorization: 'Bearer ' + token
+				},
 				method: 'PUT',
 				body: formData
 			};
@@ -934,7 +962,16 @@ export default {
 			this.getPeople();
 		},
 		async deletePeople() {
+			const token = localStorage.getItem('jwt');
+
+			if (!token) {
+				throw new Error('No token');
+			}
+
 			await fetch(process.env.VUE_APP_API_URL + `people/${this.editedItem._id}`, {
+				headers: {
+					Authorization: 'Bearer ' + token
+				},
 				method: 'DELETE'
 			});
 			this.getPeople();
