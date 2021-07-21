@@ -139,7 +139,7 @@ export default {
 						}
 					});
 			} catch (error) {
-				this.setupAlert(true, error, 'error');
+				this.setupAlert(true, 'Email o Contraseña es incorrecta.', 'error');
 			}
 		}
 	}
