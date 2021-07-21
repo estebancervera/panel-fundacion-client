@@ -23,16 +23,6 @@
 							></v-text-field>
 						</validation-provider>
 
-						<validation-provider v-slot="{ errors }" name="checkbox">
-							<v-checkbox
-								v-model="remember"
-								:error-messages="errors"
-								:value="true"
-								label="Rememeber"
-								type="checkbox"
-							></v-checkbox>
-						</validation-provider>
-
 						<v-btn class="mr-4" type="submit" :disabled="invalid" color="primary">
 							Iniciar Sesión
 						</v-btn>
