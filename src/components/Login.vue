@@ -84,6 +84,7 @@ export default {
 		},
 		clear() {
 			this.name = '';
+			this.password = '';
 			this.phoneNumber = '';
 			this.email = '';
 			this.select = null;
