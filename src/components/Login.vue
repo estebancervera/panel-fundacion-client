@@ -1,5 +1,15 @@
 <template>
 	<v-container>
+		<v-alert
+			v-model="alert"
+			transition="slide-y-transition"
+			border="left"
+			close-text="Close Alert"
+			:type="alertType"
+			dismissible
+		>
+			{{ alertMessage }}
+		</v-alert>
 		<v-row justify="space-around">
 			<v-img max-height="250" max-width="500" src="../assets/IMG_LOGO.jpg"></v-img>
 		</v-row>
@@ -73,7 +83,11 @@ export default {
 		email: '',
 		password: '',
 		remember: false,
-		show1: false
+		show1: false,
+
+		alert: false,
+		alertMessage: '',
+		alertType: 'error'
 	}),
 
 	methods: {
@@ -81,6 +95,11 @@ export default {
 			this.$refs.observer.validate();
 			//login
 			this.sendLogin();
+		},
+		setupAlert(active, message, type) {
+			this.alert = active;
+			this.alertMessage = message;
+			this.alertType = type;
 		},
 		clear() {
 			this.name = '';
@@ -92,31 +111,36 @@ export default {
 			this.$refs.observer.reset();
 		},
 		async sendLogin() {
-			const formData = new FormData();
-			formData.append('email', this.email);
-			formData.append('password', this.password);
+			try {
+				const formData = new FormData();
+				formData.append('email', this.email);
+				formData.append('password', this.password);
 
-			const requestOptions = {
-				method: 'POST',
-				body: formData
-			};
-			this.clear();
-			await fetch(process.env.VUE_APP_API_URL + 'login/', requestOptions)
-				.then(response => response.json())
-				.then(response => {
-					console.log(response);
-					try {
-						localStorage.setItem('user', JSON.stringify(response.user));
-						localStorage.setItem('jwt', response.token);
+				const requestOptions = {
+					method: 'POST',
+					body: formData
+				};
+				this.clear();
+				await fetch(process.env.VUE_APP_API_URL + 'login/', requestOptions)
+					.then(response => response.json())
+					.then(response => {
+						console.log(response);
+						try {
+							localStorage.setItem('user', JSON.stringify(response.user));
+							localStorage.setItem('jwt', response.token);
 
-						if (localStorage.getItem('jwt') != null) {
-							this.$router.push('/admin/people');
+							if (localStorage.getItem('jwt') != null) {
+								this.$router.push('/admin/people');
+							}
+						} catch (error) {
+							console.log(error);
+							this.setupAlert(true, error, 'error');
+							//show Alert
 						}
-					} catch (error) {
-						console.log(error);
-						//show Alert
-					}
-				});
+					});
+			} catch (error) {
+				this.setupAlert(true, error, 'error');
+			}
 		}
 	}
 };
