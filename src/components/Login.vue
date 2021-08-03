@@ -40,6 +40,13 @@
 				</validation-observer>
 			</v-card>
 		</v-row>
+		<v-dialog v-model="loadingDialog" hide-overlay persistent width="100">
+			<v-card color="primary" dark>
+				<v-card-text class="text-center">
+					<v-progress-circular indeterminate color="white" size="50" class="mt-4"> </v-progress-circular>
+				</v-card-text>
+			</v-card>
+		</v-dialog>
 	</v-container>
 </template>
 
@@ -84,6 +91,7 @@ export default {
 		password: '',
 		remember: false,
 		show1: false,
+		loadingDialog: false,
 
 		alert: false,
 		alertMessage: '',
@@ -112,6 +120,7 @@ export default {
 		},
 		async sendLogin() {
 			try {
+				loadingDialog = true;
 				const formData = new FormData();
 				formData.append('email', this.email);
 				formData.append('password', this.password);
@@ -130,16 +139,19 @@ export default {
 							localStorage.setItem('jwt', response.token);
 
 							if (localStorage.getItem('jwt') != null) {
+								this.loadingDialog = false;
 								this.$router.push('/admin/people');
 							}
 						} catch (error) {
 							console.log(error);
 							this.setupAlert(true, error, 'error');
 							//show Alert
+							this.loadingDialog = false;
 						}
 					});
 			} catch (error) {
 				this.setupAlert(true, 'Email o Contraseña es incorrecta.', 'error');
+				this.loadingDialog = false;
 			}
 		}
 	}
