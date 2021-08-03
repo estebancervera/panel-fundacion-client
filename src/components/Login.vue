@@ -120,7 +120,7 @@ export default {
 		},
 		async sendLogin() {
 			try {
-				loadingDialog = true;
+				this.loadingDialog = true;
 				const formData = new FormData();
 				formData.append('email', this.email);
 				formData.append('password', this.password);
