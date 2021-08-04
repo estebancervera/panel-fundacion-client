@@ -1,5 +1,8 @@
 <template>
 	<v-card :elevation="0" color="transparent">
+		<v-alert v-model="alertShowing" close-text="Close Alert" :type="alertType" dark dismissible>
+			{{ alertMessage }}
+		</v-alert>
 		<v-card-title class="font-weight-bold">
 			Asistencias
 			<v-spacer></v-spacer>
@@ -115,6 +118,11 @@ export default {
 			dialog: false,
 			dialogDelete: false,
 			//date: format(parseISO(new Date().toISOString()), 'yyyy-MM-dd'),
+
+			alertMessage: '',
+			alertShowing: false,
+			alertType: '',
+
 			headers: [
 				{ text: 'Fecha', value: 'date' },
 				{ text: 'Asistencia', value: 'total_people', align: 'center' },
@@ -168,6 +176,11 @@ export default {
 		}
 	},
 	methods: {
+		setupAlert(msg, type) {
+			this.alertMessage = msg;
+			this.alertShowing = true;
+			this.alertType = type;
+		},
 		getColor(people) {
 			if (people < 5) return 'red';
 			else if (people < 10) return 'orange';
@@ -250,107 +263,151 @@ export default {
 
 		// NETWORK LOGIC
 		async getPeople() {
-			const token = localStorage.getItem('jwt');
+			try {
+				const token = localStorage.getItem('jwt');
 
-			if (!token) {
-				throw new Error('No token');
-			}
-			await fetch(process.env.VUE_APP_API_URL + 'people/list', {
-				headers: {
-					Authorization: 'Bearer ' + token
+				if (!token) {
+					throw new Error('No token');
 				}
-			})
-				.then(response => response.json())
-				.then(data => {
-					//console.log(data);
-					this.all_people = data.data;
-				});
+				await fetch(process.env.VUE_APP_API_URL + 'people/list', {
+					headers: {
+						Authorization: 'Bearer ' + token
+					}
+				})
+					.then(response => response.json())
+					.then(data => {
+						//console.log(data);
+						this.all_people = data.data;
+					});
+			} catch (error) {
+				console.log(error);
+				this.setupAlert(error, 'error');
+			}
 		},
 		async getAttendance() {
-			const token = localStorage.getItem('jwt');
+			try {
+				const token = localStorage.getItem('jwt');
 
-			if (!token) {
-				throw new Error('No token');
-			}
-			await fetch(process.env.VUE_APP_API_URL + 'attendance/', {
-				headers: {
-					Authorization: 'Bearer ' + token
+				if (!token) {
+					throw new Error('No token');
 				}
-			})
-				.then(response => response.json())
-				.then(data => {
-					//console.log(data.data);
-					this.attendances = this.getTotalAttendance(data.data);
-				});
+				await fetch(process.env.VUE_APP_API_URL + 'attendance/', {
+					headers: {
+						Authorization: 'Bearer ' + token
+					}
+				})
+					.then(response => response.json())
+					.then(data => {
+						//console.log(data.data);
+						this.attendances = this.getTotalAttendance(data.data);
+					});
+			} catch (error) {
+				console.log(error);
+				this.setupAlert(error, 'error');
+			}
 		},
 
 		async addAttendance() {
-			const token = localStorage.getItem('jwt');
+			try {
+				const token = localStorage.getItem('jwt');
 
-			if (!token) {
-				throw new Error('No token');
+				if (!token) {
+					throw new Error('No token');
+				}
+				const formData = new FormData();
+				//formData.append('uuid', uuidv4());
+				const date = moment(this.editedItem.date);
+				formData.append('date', date);
+				formData.append('uuid', uuidv4());
+				formData.append('people', this.editedItem.people);
+
+				const requestOptions = {
+					headers: {
+						Authorization: 'Bearer ' + token
+					},
+					method: 'POST',
+					body: formData
+				};
+
+				await fetch(process.env.VUE_APP_API_URL + 'attendance/', requestOptions).then(async response => {
+					if (response.ok) {
+						this.setupAlert('Asistencia agregada correctamente', 'success');
+					} else {
+						const data = await response.json();
+						this.setupAlert(data.msg, 'error');
+					}
+				});
+				this.getAttendance();
+				this.getPeople();
+			} catch (error) {
+				console.log(error);
+				this.setupAlert(error, 'error');
 			}
-			const formData = new FormData();
-			//formData.append('uuid', uuidv4());
-			const date = moment(this.editedItem.date);
-			formData.append('date', date);
-			formData.append('uuid', uuidv4());
-			formData.append('people', this.editedItem.people);
-
-			const requestOptions = {
-				headers: {
-					Authorization: 'Bearer ' + token
-				},
-				method: 'POST',
-				body: formData
-			};
-
-			await fetch(process.env.VUE_APP_API_URL + 'attendance/', requestOptions).then(response => {
-				response.json();
-			});
-			this.getAttendance();
-			this.getPeople();
 		},
 		async editAttendance() {
-			const token = localStorage.getItem('jwt');
+			try {
+				const token = localStorage.getItem('jwt');
 
-			if (!token) {
-				throw new Error('No token');
+				if (!token) {
+					throw new Error('No token');
+				}
+				console.log(this.editedItem.date);
+				const formData = new FormData();
+				const date = moment(this.editedItem.date);
+				formData.append('date', date);
+				formData.append('people', this.editedItem.people);
+
+				const requestOptions = {
+					headers: {
+						Authorization: 'Bearer ' + token
+					},
+					method: 'PUT',
+					body: formData
+				};
+
+				await fetch(process.env.VUE_APP_API_URL + `attendance/${this.editedItem._id}`, requestOptions).then(
+					async response => {
+						if (response.ok) {
+							this.setupAlert('Asistencia editada correctamente', 'success');
+						} else {
+							const data = await response.json();
+							this.setupAlert(data.msg, 'error');
+						}
+					}
+				);
+				this.getAttendance();
+				this.getPeople();
+			} catch (error) {
+				console.log(error);
+				this.setupAlert(error, 'error');
 			}
-			console.log(this.editedItem.date);
-			const formData = new FormData();
-			const date = moment(this.editedItem.date);
-			formData.append('date', date);
-			formData.append('people', this.editedItem.people);
-
-			const requestOptions = {
-				headers: {
-					Authorization: 'Bearer ' + token
-				},
-				method: 'PUT',
-				body: formData
-			};
-
-			await fetch(process.env.VUE_APP_API_URL + `attendance/${this.editedItem._id}`, requestOptions).then(response => {
-				response.json();
-			});
-			this.getAttendance();
-			this.getPeople();
 		},
 		async deleteAttendance() {
-			const token = localStorage.getItem('jwt');
+			try {
+				const token = localStorage.getItem('jwt');
 
-			if (!token) {
-				throw new Error('No token');
+				if (!token) {
+					throw new Error('No token');
+				}
+				await fetch(process.env.VUE_APP_API_URL + `attendance/${this.editedItem._id}`, {
+					headers: {
+						Authorization: 'Bearer ' + token
+					},
+					method: 'DELETE'
+				}).then(async response => {
+					if (response.ok) {
+						this.setupAlert('Asistencia agregada correctamente', 'success');
+					} else {
+						const data = await response.json();
+						this.setupAlert(data.msg, 'error');
+					}
+				});
+				this.getAttendance();
+				this.getPeople();
+			} catch (error) {
+				console.log(error);
+				this.setupAlert(error, 'error');
 			}
-			await fetch(process.env.VUE_APP_API_URL + `attendance/${this.editedItem._id}`, {
-				headers: {
-					Authorization: 'Bearer ' + token
-				},
-				method: 'DELETE'
-			});
-			this.getAttendance();
-			this.getPeople();
 		}
 	},
 	created() {

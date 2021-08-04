@@ -1,5 +1,8 @@
 <template>
 	<v-card :elevation="0" color="transparent">
+		<v-alert v-model="alertShowing" close-text="Close Alert" :type="alertType" dark dismissible>
+			{{ alertMessage }}
+		</v-alert>
 		<v-card-title class="font-weight-bold">
 			Personas
 			<v-spacer></v-spacer>
@@ -488,9 +491,12 @@
 				</v-icon>
 			</template>
 			<template v-slot:no-data>
-				<v-btn color="primary" @click="getPeople">
-					Reset
-				</v-btn>
+				<div class="my-3">
+					<h2 class="py-3 text-h3 ">No hay Personas</h2>
+					<v-btn color="primary" @click="getPeople">
+						Refrescar
+					</v-btn>
+				</div>
 			</template>
 		</v-data-table>
 	</v-card>
@@ -510,6 +516,10 @@ export default {
 			search: '',
 			dialog: false,
 			dialogDelete: false,
+
+			alertMessage: '',
+			alertShowing: false,
+			alertType: '',
 
 			newImage: null,
 			addingNewPayment: false,
@@ -551,7 +561,8 @@ export default {
 				// 	value: 'image'
 				// },
 				{ text: 'Nombre', value: 'name' },
-				{ text: 'Apellidos', value: 'last_name' },
+				{ text: 'Apellido Paterno', value: 'first_last_name' },
+				{ text: 'Apellido Materno', value: 'second_last_name' },
 				{ text: 'Genero', value: 'gender', align: 'center' },
 				{ text: 'Fecha de Nacimiento', value: 'birthday' },
 				{ text: 'Ayudas', value: 'total_given', align: 'center' },
@@ -696,6 +707,11 @@ export default {
 		}
 	},
 	methods: {
+		setupAlert(msg, type) {
+			this.alertMessage = msg;
+			this.alertShowing = true;
+			this.alertType = type;
+		},
 		getColor(money) {
 			if (money > 2000) return 'red';
 			else if (money > 1000) return 'orange';
@@ -809,130 +825,169 @@ export default {
 		// NETWORK LOGIC
 
 		async getPeople() {
-			const token = localStorage.getItem('jwt');
+			try {
+				const token = localStorage.getItem('jwt');
 
-			if (!token) {
-				throw new Error('No token');
-			}
-
-			await fetch(process.env.VUE_APP_API_URL + 'people/', {
-				headers: {
-					Authorization: 'Bearer ' + token
+				if (!token) {
+					throw new Error('No token');
 				}
-			})
-				.then(response => response.json())
-				.then(data => {
-					this.people = this.getTotalGiven(data.data);
-				});
+
+				await fetch(process.env.VUE_APP_API_URL + 'people/', {
+					headers: {
+						Authorization: 'Bearer ' + token
+					}
+				})
+					.then(response => response.json())
+					.then(data => {
+						this.people = this.getTotalGiven(data.data);
+					});
+			} catch (error) {
+				console.log(error);
+				this.setupAlert(error, 'error');
+			}
 		},
 
 		async addPeople() {
-			const token = localStorage.getItem('jwt');
+			try {
+				const token = localStorage.getItem('jwt');
 
-			if (!token) {
-				throw new Error('No token');
+				if (!token) {
+					throw new Error('No token');
+				}
+
+				const formData = new FormData();
+				//formData.append('uuid', uuidv4());
+				const birthday = moment(this.editedItem.birthday);
+				formData.append('name', this.editedItem.name);
+				formData.append('first_last_name', this.editedItem.first_last_name);
+				formData.append('second_last_name', this.editedItem.second_last_name);
+				formData.append('birthday', birthday);
+				formData.append('gender', this.editedItem.gender);
+				formData.append('active', this.editedItem.active);
+				formData.append('curp', this.editedItem.curp);
+				formData.append('address', this.editedItem.address);
+				formData.append('phone', this.editedItem.phone);
+				formData.append('education', this.editedItem.education);
+				formData.append('is_married', this.editedItem.is_married);
+				formData.append('number_children', this.editedItem.number_children);
+				formData.append('job', this.editedItem.job);
+				formData.append('place_of_work', this.editedItem.place_of_work);
+				formData.append('monthly_income', this.editedItem.monthly_income);
+				formData.append('insurance', this.editedItem.insurance);
+				formData.append('food_behavior_weekly', JSON.stringify(this.editedItem.food_behavior_weekly));
+				formData.append('living_place', JSON.stringify(this.editedItem.living_place));
+				formData.append('religion', this.editedItem.religion);
+				formData.append('given', JSON.stringify(this.editedItem.given));
+				if (this.newImage) {
+					formData.append('file', this.newImage);
+				}
+
+				const requestOptions = {
+					headers: {
+						Authorization: 'Bearer ' + token
+					},
+					method: 'POST',
+					body: formData
+				};
+
+				await fetch(process.env.VUE_APP_API_URL + 'people/', requestOptions).then(async response => {
+					if (response.ok) {
+						this.setupAlert('Persona agregada correctamente', 'success');
+					} else {
+						const data = await response.json();
+						this.setupAlert(data.msg, 'error');
+					}
+				});
+				this.getPeople();
+			} catch (error) {
+				console.log(error);
+				this.setupAlert(error, 'error');
 			}
-
-			const formData = new FormData();
-			//formData.append('uuid', uuidv4());
-			const birthday = moment(this.editedItem.birthday);
-			formData.append('name', this.editedItem.name);
-			formData.append('first_last_name', this.editedItem.first_last_name);
-			formData.append('second_last_name', this.editedItem.second_last_name);
-			formData.append('birthday', birthday);
-			formData.append('gender', this.editedItem.gender);
-			formData.append('active', this.editedItem.active);
-			formData.append('curp', this.editedItem.curp);
-			formData.append('address', this.editedItem.address);
-			formData.append('phone', this.editedItem.phone);
-			formData.append('education', this.editedItem.education);
-			formData.append('is_married', this.editedItem.is_married);
-			formData.append('number_children', this.editedItem.number_children);
-			formData.append('job', this.editedItem.job);
-			formData.append('place_of_work', this.editedItem.place_of_work);
-			formData.append('monthly_income', this.editedItem.monthly_income);
-			formData.append('insurance', this.editedItem.insurance);
-			formData.append('food_behavior_weekly', JSON.stringify(this.editedItem.food_behavior_weekly));
-			formData.append('living_place', JSON.stringify(this.editedItem.living_place));
-			formData.append('religion', this.editedItem.religion);
-			formData.append('given', JSON.stringify(this.editedItem.given));
-			if (this.newImage) {
-				formData.append('file', this.newImage);
-			}
-
-			const requestOptions = {
-				headers: {
-					Authorization: 'Bearer ' + token
-				},
-				method: 'POST',
-				body: formData
-			};
-
-			await fetch(process.env.VUE_APP_API_URL + 'people/', requestOptions).then(response => {
-				response.json();
-			});
-			this.getPeople();
 		},
 		async editPeople() {
-			const token = localStorage.getItem('jwt');
+			try {
+				const token = localStorage.getItem('jwt');
 
-			if (!token) {
-				throw new Error('No token');
+				if (!token) {
+					throw new Error('No token');
+				}
+
+				const formData = new FormData();
+				const birthday = moment(this.editedItem.birthday);
+				formData.append('name', this.editedItem.name);
+				formData.append('first_last_name', this.editedItem.first_last_name);
+				formData.append('second_last_name', this.editedItem.second_last_name);
+				formData.append('birthday', birthday);
+				formData.append('gender', this.editedItem.gender);
+				formData.append('curp', this.editedItem.curp);
+				formData.append('active', this.editedItem.active);
+				formData.append('address', this.editedItem.address);
+				formData.append('phone', this.editedItem.phone);
+				formData.append('education', this.editedItem.education);
+				formData.append('is_married', this.editedItem.is_married);
+				formData.append('number_children', this.editedItem.number_children);
+				formData.append('job', this.editedItem.job);
+				formData.append('place_of_work', this.editedItem.place_of_work);
+				formData.append('monthly_income', this.editedItem.monthly_income);
+				formData.append('insurance', this.editedItem.insurance);
+				formData.append('food_behavior_weekly', JSON.stringify(this.editedItem.food_behavior_weekly));
+				formData.append('living_place', JSON.stringify(this.editedItem.living_place));
+				formData.append('religion', this.editedItem.religion);
+				formData.append('given', JSON.stringify(this.editedItem.given));
+				if (this.newImage) {
+					formData.append('file', this.newImage);
+				}
+
+				const requestOptions = {
+					headers: {
+						Authorization: 'Bearer ' + token
+					},
+					method: 'PUT',
+					body: formData
+				};
+
+				await fetch(process.env.VUE_APP_API_URL + `people/${this.editedItem._id}`, requestOptions).then(
+					async response => {
+						if (response.ok) {
+							this.setupAlert('Persona editada correctamente', 'success');
+						} else {
+							const data = await response.json();
+							this.setupAlert(data.msg, 'error');
+						}
+					}
+				);
+				this.getPeople();
+			} catch (error) {
+				console.log(error);
+				this.setupAlert(error, 'error');
 			}
-
-			const formData = new FormData();
-			const birthday = moment(this.editedItem.birthday);
-			formData.append('name', this.editedItem.name);
-			formData.append('first_last_name', this.editedItem.first_last_name);
-			formData.append('second_last_name', this.editedItem.second_last_name);
-			formData.append('birthday', birthday);
-			formData.append('gender', this.editedItem.gender);
-			formData.append('curp', this.editedItem.curp);
-			formData.append('active', this.editedItem.active);
-			formData.append('address', this.editedItem.address);
-			formData.append('phone', this.editedItem.phone);
-			formData.append('education', this.editedItem.education);
-			formData.append('is_married', this.editedItem.is_married);
-			formData.append('number_children', this.editedItem.number_children);
-			formData.append('job', this.editedItem.job);
-			formData.append('place_of_work', this.editedItem.place_of_work);
-			formData.append('monthly_income', this.editedItem.monthly_income);
-			formData.append('insurance', this.editedItem.insurance);
-			formData.append('food_behavior_weekly', JSON.stringify(this.editedItem.food_behavior_weekly));
-			formData.append('living_place', JSON.stringify(this.editedItem.living_place));
-			formData.append('religion', this.editedItem.religion);
-			formData.append('given', JSON.stringify(this.editedItem.given));
-			if (this.newImage) {
-				formData.append('file', this.newImage);
-			}
-
-			const requestOptions = {
-				headers: {
-					Authorization: 'Bearer ' + token
-				},
-				method: 'PUT',
-				body: formData
-			};
-
-			await fetch(process.env.VUE_APP_API_URL + `people/${this.editedItem._id}`, requestOptions).then(response => {
-				response.json();
-			});
-			this.getPeople();
 		},
 		async deletePeople() {
-			const token = localStorage.getItem('jwt');
+			try {
+				const token = localStorage.getItem('jwt');
 
-			if (!token) {
-				throw new Error('No token');
+				if (!token) {
+					throw new Error('No token');
+				}
+
+				await fetch(process.env.VUE_APP_API_URL + `people/${this.editedItem._id}`, {
+					headers: {
+						Authorization: 'Bearer ' + token
+					},
+					method: 'DELETE'
+				}).then(async response => {
+					if (response.ok) {
+						this.setupAlert('Persona eliminada correctamente', 'success');
+					} else {
+						const data = await response.json();
+						this.setupAlert(data.msg, 'error');
+					}
+				});
+				this.getPeople();
+			} catch (error) {
+				console.log(error);
+				this.setupAlert(error, 'error');
 			}
-
-			await fetch(process.env.VUE_APP_API_URL + `people/${this.editedItem._id}`, {
-				headers: {
-					Authorization: 'Bearer ' + token
-				},
-				method: 'DELETE'
-			});
-			this.getPeople();
 		}
 	},
 	created() {
