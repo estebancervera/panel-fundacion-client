@@ -12,7 +12,7 @@
 			<template v-slot:top>
 				<v-toolbar flat color="transparent">
 					<v-spacer></v-spacer>
-					<v-dialog v-model="dialog" max-width="1000px">
+					<v-dialog persistent v-model="dialog" max-width="1000px">
 						<template v-slot:activator="{ on, attrs }">
 							<v-btn color="primary" dark class="mb-2" v-bind="attrs" v-on="on">
 								Agregar Persona
@@ -519,7 +519,7 @@ export default {
 
 			alertMessage: '',
 			alertShowing: false,
-			alertType: '',
+			alertType: 'error',
 
 			newImage: null,
 			addingNewPayment: false,
@@ -895,12 +895,14 @@ export default {
 						this.setupAlert('Persona agregada correctamente', 'success');
 					} else {
 						const data = await response.json();
+						console.log(data);
 						this.setupAlert(data.msg, 'error');
 					}
 				});
 				this.getPeople();
 			} catch (error) {
 				console.log(error);
+				console.log('1');
 				this.setupAlert(error, 'error');
 			}
 		},

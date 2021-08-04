@@ -39,7 +39,7 @@
 														<v-list-item-content>
 															<v-list-item-title
 																class="text-left"
-																v-text="`${item.name} ${item.last_name}`"
+																v-text="`${item.name} ${item.first_last_name} ${item.second_last_name}`"
 															></v-list-item-title>
 														</v-list-item-content>
 
@@ -95,9 +95,12 @@
 				</v-icon>
 			</template>
 			<template v-slot:no-data>
-				<v-btn color="primary" @click="getAttendance">
-					Reset
-				</v-btn>
+				<div class="my-3">
+					<h2 class="py-3 text-h3 ">No hay Asistencias</h2>
+					<v-btn color="primary" @click="getAttendance">
+						Refrescar
+					</v-btn>
+				</div>
 			</template>
 		</v-data-table>
 	</v-card>
@@ -121,7 +124,7 @@ export default {
 
 			alertMessage: '',
 			alertShowing: false,
-			alertType: '',
+			alertType: 'error',
 
 			headers: [
 				{ text: 'Fecha', value: 'date' },
@@ -396,7 +399,7 @@ export default {
 					method: 'DELETE'
 				}).then(async response => {
 					if (response.ok) {
-						this.setupAlert('Asistencia agregada correctamente', 'success');
+						this.setupAlert('Asistencia eliminada correctamente', 'success');
 					} else {
 						const data = await response.json();
 						this.setupAlert(data.msg, 'error');
