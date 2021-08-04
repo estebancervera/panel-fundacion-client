@@ -25,11 +25,14 @@
 									<v-container>
 										<h2 class="mb-4">Datos Generales</h2>
 										<v-row>
-											<v-col cols="12" sm="6" md="4">
+											<v-col cols="12" sm="4" md="4">
 												<v-text-field v-model="editedItem.name" label="Nombre"></v-text-field>
 											</v-col>
-											<v-col cols="12" sm="6" md="8">
-												<v-text-field v-model="editedItem.last_name" label="Apellidos"></v-text-field>
+											<v-col cols="12" sm="4" md="4">
+												<v-text-field v-model="editedItem.first_last_name" label="Apellido Paterno"></v-text-field>
+											</v-col>
+											<v-col cols="12" sm="4" md="4">
+												<v-text-field v-model="editedItem.second_last_name" label="Apellido Materno"></v-text-field>
 											</v-col>
 											<!-- <v-col cols="12" sm="6" md="6">
 												<v-text-field
@@ -46,7 +49,7 @@
 												></v-text-field>
 											</v-col> -->
 										</v-row>
-										<v-row>
+										<v-row justify="center">
 											<v-col cols="12" sm="12" md="12">
 												<h2 class="pb-2 font-weight-light">Fecha de Nacimiento</h2>
 												<v-date-picker v-model="editedItem.birthday"></v-date-picker>
@@ -68,13 +71,16 @@
 											</v-col>
 										</v-row>
 										<v-row>
-											<v-col cols="12" sm="12" md="12">
+											<v-col cols="12" sm="6" md="8">
 												<v-text-field
 													counter
 													:rules="phoneRules"
 													v-model="editedItem.phone"
 													label="Telefono"
 												></v-text-field>
+											</v-col>
+											<v-col cols="12" sm="6" md="4">
+												<v-text-field v-model="editedItem.curp" label="CURP"></v-text-field>
 											</v-col>
 										</v-row>
 										<v-row>
@@ -545,7 +551,7 @@ export default {
 				// 	value: 'image'
 				// },
 				{ text: 'Nombre', value: 'name' },
-				{ text: 'Apellido', value: 'last_name' },
+				{ text: 'Apellidos', value: 'last_name' },
 				{ text: 'Genero', value: 'gender', align: 'center' },
 				{ text: 'Fecha de Nacimiento', value: 'birthday' },
 				{ text: 'Ayudas', value: 'total_given', align: 'center' },
@@ -553,72 +559,18 @@ export default {
 				{ text: 'Estado', value: 'active', align: 'center' },
 				{ text: 'Acciones', value: 'actions', sortable: false }
 			],
-			people: [
-				{
-					image: 'https://source.unsplash.com/random/50x50',
-					name: 'Pedro',
-					last_name: 'Lopez Marquez',
-					birthday: '2018-08-15',
-					total_given: 1800,
-					total_assistance: 9,
-					active: true,
-					gender: 'male',
-					address: 'calle 29 #231 x38a y 34',
-					phone: '',
-					education: '', //picker
-					is_married: true,
-					number_children: 2,
-					job: '',
-					place_of_work: '',
-					monthly_income: 4000,
-					insurance: '', //picker
-					/*
-					  0 - 1 to 2 days
-					  1 - 3 to 5 days
-					  2 - 6 to 7 days
-					*/
-					food_behavior_weekly: {
-						meats: 2,
-						eggs: 3,
-						dairy: 2,
-						vegetables: 1,
-						legumes: 2,
-						cereals: 3,
-						juices: 2,
-						sodas: 3
-					},
-					living_place: {
-						ownership_type: '', // picker
-						materials: {
-							walls: '', //picker
-							ceilings: '', //picker
-							floors: '', //picker
-							hygiene: '', //picker
-							bathroom: '' //picker
-						},
-						number_floors: 2,
-						number_rooms: 5,
-						sleeping_rooms: 2
-						//trash_solution: '' //picker
-					},
-					religion: {
-						religion: '' //picker
-					},
-					given: [{ uuid: uuidv4(), reason: 'Pago para comida', date: moment().format('L'), amount: 3000 }],
-					assistance: [
-						//dates or ids
-					]
-				}
-			],
+			people: [],
 			editedIndex: -1,
 			editedItem: {
 				image: 'https://source.unsplash.com/random/50x50',
 				name: '',
-				last_name: '',
+				first_last_name: '',
+				second_last_name: '',
 				birth_date: '',
 				active: true,
 				gender: 'male',
 				address: '',
+				curp: '',
 				phone: '',
 				education: '', //picker
 				is_married: true,
@@ -667,9 +619,11 @@ export default {
 			defaultItem: {
 				image: 'https://source.unsplash.com/random/50x50',
 				name: '',
-				last_name: '',
+				first_last_name: '',
+				second_last_name: '',
 				birth_date: '',
 				total_given: 0,
+				curp: '',
 				total_assistance: 0,
 				active: true,
 				gender: 'male',
@@ -883,10 +837,12 @@ export default {
 			//formData.append('uuid', uuidv4());
 			const birthday = moment(this.editedItem.birthday);
 			formData.append('name', this.editedItem.name);
-			formData.append('last_name', this.editedItem.last_name);
+			formData.append('first_last_name', this.editedItem.first_last_name);
+			formData.append('second_last_name', this.editedItem.second_last_name);
 			formData.append('birthday', birthday);
 			formData.append('gender', this.editedItem.gender);
 			formData.append('active', this.editedItem.active);
+			formData.append('curp', this.editedItem.curp);
 			formData.append('address', this.editedItem.address);
 			formData.append('phone', this.editedItem.phone);
 			formData.append('education', this.editedItem.education);
@@ -927,9 +883,11 @@ export default {
 			const formData = new FormData();
 			const birthday = moment(this.editedItem.birthday);
 			formData.append('name', this.editedItem.name);
-			formData.append('last_name', this.editedItem.last_name);
+			formData.append('first_last_name', this.editedItem.first_last_name);
+			formData.append('second_last_name', this.editedItem.second_last_name);
 			formData.append('birthday', birthday);
 			formData.append('gender', this.editedItem.gender);
+			formData.append('curp', this.editedItem.curp);
 			formData.append('active', this.editedItem.active);
 			formData.append('address', this.editedItem.address);
 			formData.append('phone', this.editedItem.phone);
